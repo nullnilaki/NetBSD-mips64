@@ -1,0 +1,15 @@
+#	$NetBSD: mk.rpi,v 1.8 2019/12/16 14:32:14 skrll Exp $
+
+SYSTEM_FIRST_OBJ=	armv6_start.o
+SYSTEM_FIRST_SFILE=	${ARM}/arm/armv6_start.S
+
+_OSRELEASE!=		${HOST_SH} $S/conf/osrelease.sh
+
+KERNEL_BASE_PHYS=0x00008000
+KERNEL_BASE_VIRT=0x80008000
+
+SYSTEM_LD_TAIL_EXTRA+=; \
+	echo ${OBJCOPY} -S -O binary $@ $@.img; \
+	${OBJCOPY} -S -O binary $@ $@.img;
+
+EXTRA_KERNELS+= ${KERNELS:@.KERNEL.@${.KERNEL.}.img@}

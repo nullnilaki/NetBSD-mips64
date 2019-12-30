@@ -1,0 +1,21 @@
+/Makefile/1.21/Tue Jan  9 03:31:13 2018//D2019.12.29.00.00.00
+/unicode.h/1.7/Sun Apr  6 19:25:22 2014//D2019.12.29.00.00.00
+D/adosfs////
+D/autofs////
+D/cd9660////
+D/efs////
+D/filecorefs////
+D/hfs////
+D/msdosfs////
+D/nfs////
+D/nilfs////
+D/ntfs////
+D/ptyfs////
+D/puffs////
+D/smbfs////
+D/sysvbfs////
+D/tmpfs////
+D/udf////
+D/union////
+D/unionfs////
+D/v7fs////

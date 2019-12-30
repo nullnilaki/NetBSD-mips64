@@ -1,0 +1,63 @@
+OUTPUT_ARCH(riscv)
+ENTRY(start)
+
+__PAGE_SIZE = 0x1000 ;
+__LARGE_PAGE_SIZE = 0x200000 ;
+
+SECTIONS
+{
+	.text : AT (ADDR(.text) & 0x0fffffff)
+	{
+		*(.text)
+		*(.text.*)
+		*(.stub)
+	}
+	_etext = . ;
+	PROVIDE (etext = .);
+
+	. = ALIGN(__LARGE_PAGE_SIZE);
+
+	__rodata_start = . ;
+	.rodata :
+	{
+		*(.rodata)
+		*(.rodata.*)
+		*(.srodata)
+		*(.srodata.*)
+	}
+
+	. = ALIGN(__LARGE_PAGE_SIZE);
+
+	__data_start = . ;
+	.data :
+	{
+		*(.data)
+		*(.sdata)
+		*(.sdata.*)
+	}
+	_edata = . ;
+	PROVIDE (edata = .) ;
+
+	__bss_start = .;
+	.bss :
+	{
+		*(.bss)
+		*(.bss.*)
+		*(.sbss)
+		*(.sbss.*)
+		*(COMMON)
+		. = ALIGN(__LARGE_PAGE_SIZE);
+	}
+
+	. = ALIGN(__PAGE_SIZE);
+
+	/* End of the kernel image */
+	__kernel_end = . ;
+
+	_end = . ;
+	PROVIDE (end = .) ;
+	.note.netbsd.ident :
+	{
+		KEEP(*(.note.netbsd.ident));
+	}
+}

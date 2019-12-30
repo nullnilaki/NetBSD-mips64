@@ -1,0 +1,10 @@
+/Makefile/1.2/Sun Feb 20 07:47:39 2011//D2019.12.29.00.00.00
+/Makefile.bootprogs/1.14/Sat Apr  8 19:53:22 2017//D2019.12.29.00.00.00
+/Makefile.bootxx/1.4/Thu Jul 21 17:45:00 2016//D2019.12.29.00.00.00
+/Makefile.inc/1.1/Sat Nov  9 06:20:37 2002//D2019.12.29.00.00.00
+D/boot////
+D/bootxx_cd9660////
+D/bootxx_ffs////
+D/bootxx_lfs////
+D/common////
+D/netboot////

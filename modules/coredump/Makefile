@@ -1,0 +1,28 @@
+#	$NetBSD: Makefile,v 1.6 2019/11/20 19:37:54 pgoyette Exp $
+
+.include "../Makefile.inc"
+
+KMOD=	coredump
+
+.PATH:	${S}/kern
+SRCS=	kern_core.c core_netbsd.c 
+
+.PATH:	${S}/uvm
+SRCS+=	uvm_coredump.c
+
+.PATH:	${S}/arch/${MACHINE}/${MACHINE}
+.PATH:	${S}/arch/${MACHINE_ARCH}/${MACHINE_ARCH}
+.PATH:	${S}/arch/${MACHINE_CPU}/${MACHINE_CPU}
+.if ${MACHINE_ARCH} == "i386" || ${MACHINE_ARCH} == "x86_64"
+.PATH:	${S}/arch/x86/x86
+.endif
+.if ${MACHINE_ARCH} == "powerpc64"
+.PATH:	${S}/arch/powerpc/powerpc
+.endif
+SRCS+=	core_machdep.c
+
+WARNS=	3
+
+COPTS.kern_core.c+=	${GCC_NO_CAST_FUNCTION_TYPE}
+
+.include <bsd.kmodule.mk>

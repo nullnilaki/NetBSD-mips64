@@ -1,0 +1,16 @@
+/Makefile/1.4/Tue Nov 26 23:30:11 2002//D2019.12.29.00.00.00
+/dc21285mem.h/1.2/Sat Jun  9 10:44:11 2001//D2019.12.29.00.00.00
+/dc21285reg.h/1.5/Fri Dec 14 11:08:03 2007//D2019.12.29.00.00.00
+/footbridge.c/1.26/Wed Oct 10 21:53:09 2012//D2019.12.29.00.00.00
+/footbridge.h/1.4/Fri Jul  1 19:32:28 2011//D2019.12.29.00.00.00
+/footbridge_clock.c/1.26/Tue Jul 21 07:35:55 2009//D2019.12.29.00.00.00
+/footbridge_com.c/1.38/Fri Jul 25 08:10:32 2014//D2019.12.29.00.00.00
+/footbridge_com_io.c/1.9/Fri Mar 16 17:56:31 2018//D2019.12.29.00.00.00
+/footbridge_intr.h/1.20/Fri Jun  1 21:22:43 2018//D2019.12.29.00.00.00
+/footbridge_io.c/1.24/Fri Mar 16 17:56:31 2018//D2019.12.29.00.00.00
+/footbridge_irqhandler.c/1.26/Sun Nov 10 21:16:23 2019//D2019.12.29.00.00.00
+/footbridge_irqhandler.h/1.6/Wed Apr  2 11:35:36 2014//D2019.12.29.00.00.00
+/footbridge_machdep.c/1.10/Tue Apr  1 23:19:10 2003//D2019.12.29.00.00.00
+/footbridge_pci.c/1.31/Sat Nov 17 01:45:25 2018//D2019.12.29.00.00.00
+/footbridgevar.h/1.7/Fri Jul  1 19:32:28 2011//D2019.12.29.00.00.00
+D/isa////

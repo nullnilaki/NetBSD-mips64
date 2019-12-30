@@ -1,0 +1,16 @@
+/Makefile/1.29/Sun Jul  8 16:50:27 2018//D2019.12.29.00.00.00
+/Makefile.booters/1.93/Wed Jul 25 23:45:32 2018//D2019.12.29.00.00.00
+/Makefile.inc/1.18/Sun Jan 27 04:56:46 2019//D2019.12.29.00.00.00
+D/boot////
+D/bootxx////
+D/cdboot////
+D/dosboot////
+D/efiboot////
+D/fatboot////
+D/genprom////
+D/lib////
+D/libsa////
+D/mbr////
+D/misc////
+D/netboot////
+D/pxeboot////
