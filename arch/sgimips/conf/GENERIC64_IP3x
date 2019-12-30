@@ -33,5 +33,6 @@ makeoptions	TEXTADDR="0xffffffff80069000"	# entry point
 # Compatibility options
 #include 	"conf/compat_netbsd15.config"
 
+options 	ENABLE_MIPS_16KB_PAGE
 #options 	COMPAT_LINUX	# binary compatibility with Linux
 #options 	COMPAT_ULTRIX	# binary compatibility with Ultrix 
