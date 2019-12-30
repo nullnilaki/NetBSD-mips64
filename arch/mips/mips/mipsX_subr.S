@@ -574,9 +574,9 @@ VECTOR(MIPSX(cache), unknown)
 	and	k0, k1					#02
 	li	k1, MIPS_KSEG1_START			#03
 	or	k0, k1					#04
-	lui	k1, %hi(CPUVAR(CURLWP))			#05: k1=hi of curlwp
+	dla k1, (CPUVAR(CURLWP))			#05: k1=hi of curlwp
 	jr	k0					#06
-	 PTR_L	k1, %lo(CPUVAR(CURLWP))(k1)		#07: k1=lo of curlwp
+	 ld 	k1, 0(k1)		#07: k1=lo of curlwp
 _VECTOR_END(MIPSX(cache))
 
 /*
@@ -615,9 +615,9 @@ VECTOR(MIPSX(exception), unknown)
 						#  shifted left by 2 bits so
 						#  we dont have to shift.
 	PTR_L	k0, 0(k0)			#09: get the function address
-	lui	k1, %hi(CPUVAR(CURLWP))		#0a: k1=hi of curlwp
+	dla k1, (CPUVAR(CURLWP))
 	jr	k0				#0b: jump to the function
-	 PTR_L	k1, %lo(CPUVAR(CURLWP))(k1)	#0c: k1=lo of curlwp
+	 ld 	k1, 0(k1) 	#0c: k1=lo of curlwp
 	nop					#0d
 	nop					#0e
 #ifndef _LP64
@@ -641,10 +641,11 @@ VECTOR(MIPSX(intr), unknown)
 	bnez	k0, 1f				#03: yep, do it
 	 nop					#04:  branch deay
 	j	MIPSX(kern_intr)		#05: nope, kernel intr
+	nop
 1:
-	lui	k1, %hi(CPUVAR(CURLWP))		#06: k1=hi of curlwp
+	dla k1, (CPUVAR(CURLWP))
 	j	MIPSX(user_intr)		#07: user intr
-	 PTR_L	k1, %lo(CPUVAR(CURLWP))(k1)	#08: k1=lo of curlwp
+	 ld 	k1, 0(k1) 	#0c: k1=lo of curlwp
 	.set	at
 _VECTOR_END(MIPSX(intr))
 
@@ -1743,9 +1744,9 @@ NESTED_NOPROFILE(MIPSX(systemcall), CALLFRAME_SIZ, ra)
 /*
  * We have pending asynchronous traps; all the state is already saved.
  */
-	lui	ra, %hi(MIPSX(user_return))	# return directly to user return
+ 	dla ra, (MIPSX(user_return))
 	j	_C_LABEL(ast)
-	 PTR_ADDIU ra, %lo(MIPSX(user_return))	# return directly to user return
+	 nop
 END(MIPSX(systemcall))
 
 /*
