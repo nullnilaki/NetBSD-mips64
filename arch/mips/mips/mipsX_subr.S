@@ -1288,8 +1288,6 @@ NESTED_NOPROFILE(MIPSX(user_reserved_insn), CALLFRAME_SIZ, ra)
 	 * Save a minimum of registers to see if this is rdhwr $3,$29
 	 */
 	KERN_ENTRY_ERRATA
-    dla k1, (CPUVAR(CURLWP))
-    ld 	k1, 0(k1)
 	PTR_L	k0, L_PCB(k1)			# XXXuvm_lwp_getuarea
 	PTR_ADDU k0, USPACE - TF_SIZ - CALLFRAME_SIZ
 
@@ -1352,6 +1350,8 @@ NESTED_NOPROFILE(MIPSX(user_gen_exception), CALLFRAME_SIZ, ra)
 	 */
 	KERN_ENTRY_ERRATA
 	/* K1 already has CURLWP */
+	dla k1, (CPUVAR(CURLWP))
+	ld 	k1, 0(k1) 	#0c: k1=lo of curlwp
 	PTR_L	k0, L_PCB(k1)			# XXXuvm_lwp_getuarea
 	PTR_ADDU k0, USPACE - TF_SIZ - CALLFRAME_SIZ
 	REG_S	AT, CALLFRAME_SIZ+TF_REG_AST(k0)
