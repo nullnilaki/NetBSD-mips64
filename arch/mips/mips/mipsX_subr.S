@@ -1224,8 +1224,9 @@ NESTED_NOPROFILE(MIPSX(kern_intr), KERNFRAME_SIZ, ra)
 #else
 	mfc0	v0, MIPS_COP_0_STATUS		# read it
 	MFC0_HAZARD
-	xor	v0, MIPS_SR_INT_IE		# disable interrupts
-	mtc0	v0, MIPS_COP_0_STATUS		# write it
+    ori v1, v0, MIPS_SR_INT_IE
+    xori    v1, v1, MIPS_SR_INT_IE
+    mtc0    v1, MIPS_COP_0_STATUS    # Disable interrupts
 #endif
 	COP0_SYNC
 
@@ -1584,9 +1585,9 @@ NESTED_NOPROFILE(MIPSX(user_intr), CALLFRAME_SIZ, ra)
 #else
 	mfc0	v1, MIPS_COP_0_STATUS
 	MFC0_HAZARD
-	and	v0, v1, MIPS_SR_INT_IE		# clear interrupt enable
-	xor	v0, v1
-	mtc0	v0, MIPS_COP_0_STATUS		# interrupts are disabled
+    ori v0, v1, MIPS_SR_INT_IE
+    xori    v0, v0, MIPS_SR_INT_IE
+    mtc0    v0, MIPS_COP_0_STATUS    # Disable interrupts
 #endif
 	COP0_SYNC
 
@@ -2076,7 +2077,9 @@ LEAF(MIPSX(tlb_update_addr))
 	di	ta0				# Disable interrupts
 #else
 	mfc0	ta0, MIPS_COP_0_STATUS		# Save the status register.
-	mtc0	zero, MIPS_COP_0_STATUS		# Disable interrupts
+    ori ta1, ta0, MIPS_SR_INT_IE
+    xori    ta1, ta1, MIPS_SR_INT_IE
+    mtc0    ta1, MIPS_COP_0_STATUS    # Disable interrupts
 #endif
 	COP0_SYNC
 #if (PGSHIFT & 1) == 0
@@ -2202,7 +2205,9 @@ END(MIPSX(tlb_update_addr))
  */
 LEAF(MIPSX(tlb_read_entry))
 	mfc0	v1, MIPS_COP_0_STATUS		# Save the status register.
-	mtc0	zero, MIPS_COP_0_STATUS		# Disable interrupts
+    ori v0, v1, MIPS_SR_INT_IE
+    xori    v0, v0, MIPS_SR_INT_IE
+    mtc0    v0, MIPS_COP_0_STATUS    # Disable interrupts
 	COP0_SYNC
 #ifdef MIPS3
 	nop
@@ -2251,7 +2256,9 @@ END(MIPSX(tlb_read_entry))
  */
 LEAF_NOPROFILE(MIPSX(tlb_invalidate_addr))
 	mfc0	ta0, MIPS_COP_0_STATUS		# save status register
-	mtc0	zero, MIPS_COP_0_STATUS		# disable interrupts
+    ori ta1, ta0, MIPS_SR_INT_IE
+    xori    ta1, ta1, MIPS_SR_INT_IE
+    mtc0    ta1, MIPS_COP_0_STATUS    # Disable interrupts
 	COP0_SYNC
 
 #if (PGSHIFT & 1) == 0
@@ -2349,7 +2356,9 @@ END(MIPSX(tlb_invalidate_addr))
  */
 LEAF_NOPROFILE(MIPSX(tlb_invalidate_asids))
 	mfc0	v1, MIPS_COP_0_STATUS		# save status register
-	mtc0	zero, MIPS_COP_0_STATUS		# disable interrupts
+    ori v0, v1, MIPS_SR_INT_IE
+    xori    v0, v0, MIPS_SR_INT_IE
+    mtc0    v0, MIPS_COP_0_STATUS    # Disable interrupts
 	COP0_SYNC
 
 	_MFC0	t0, MIPS_COP_0_TLB_HI		# Save the current ASID.
@@ -2415,7 +2424,9 @@ END(MIPSX(tlb_invalidate_asids))
  */
 LEAF_NOPROFILE(MIPSX(tlb_invalidate_globals))
 	mfc0	v1, MIPS_COP_0_STATUS		# save status register
-	mtc0	zero, MIPS_COP_0_STATUS		# disable interrupts
+    ori v0, v1, MIPS_SR_INT_IE
+    xori    v0, ta1, MIPS_SR_INT_IE
+    mtc0    v0, MIPS_COP_0_STATUS    # Disable interrupts
 	COP0_SYNC
 
 	_MFC0	t0, MIPS_COP_0_TLB_HI		# save current ASID
@@ -2471,7 +2482,9 @@ END(MIPSX(tlb_invalidate_globals))
  */
 LEAF_NOPROFILE(MIPSX(tlb_invalidate_all))
 	mfc0	ta0, MIPS_COP_0_STATUS		# save status register
-	mtc0	zero, MIPS_COP_0_STATUS		# disable interrupts
+    ori ta1, ta0, MIPS_SR_INT_IE
+    xori    ta1, ta1, MIPS_SR_INT_IE
+    mtc0    ta1, MIPS_COP_0_STATUS    # Disable interrupts
 	COP0_SYNC
 
 	INT_L	a0, _C_LABEL(mips_options) + MO_NUM_TLB_ENTRIES
