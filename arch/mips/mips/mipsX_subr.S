@@ -1430,9 +1430,9 @@ MIPSX(user_gen_exception_common):
 /*
  * We have pending asynchronous traps; all the state is already saved.
  */
-	lui	ra, %hi(MIPSX(user_return))	# return directly to user return
+ 	dla ra, (MIPSX(user_return))
 	j	_C_LABEL(ast)
-	 PTR_ADDIU ra, %lo(MIPSX(user_return))	# return directly to user return
+	 nop	# return directly to user return
 	.set	at
 END(MIPSX(user_gen_exception))
 
