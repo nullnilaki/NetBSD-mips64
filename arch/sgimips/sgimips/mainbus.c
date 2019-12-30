@@ -85,7 +85,11 @@ mainbus_search(device_t parent, cfdata_t cf, const int *ldesc, void *aux)
 		ma->ma_name = NULL;
 		ma->ma_addr = cf->cf_loc[MAINBUSCF_ADDR];
 		ma->ma_iot = 0;
+#ifdef _LP64
+		ma->ma_ioh = MIPS_PHYS_TO_XKPHYS_UNCACHED(ma->ma_addr);
+#else
 		ma->ma_ioh = MIPS_PHYS_TO_KSEG1(ma->ma_addr);
+#endif
 		if (config_match(parent, cf, ma) > 0)
 			config_attach(parent, cf, ma, mainbus_print);
 	} while (cf->cf_fstate == FSTATE_STAR);
