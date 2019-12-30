@@ -150,7 +150,11 @@ cpu_info_alloc(struct pmap_tlb_info *ti, cpuid_t cpu_id, cpuid_t cpu_package_id,
 		return NULL;
 
 	const paddr_t pa = VM_PAGE_TO_PHYS(TAILQ_FIRST(&pglist));
+#ifdef _LP64
+	const vaddr_t va = MIPS_PHYS_TO_XKPHYS_CACHED(pa);
+#else
 	const vaddr_t va = MIPS_PHYS_TO_KSEG0(pa);
+#endif
 	struct cpu_info * const ci = (void *) (va + cpu_info_offset);
 	memset((void *)va, 0, PAGE_SIZE);
 
