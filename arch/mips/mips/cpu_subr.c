@@ -257,9 +257,6 @@ cpu_attach_common(device_t self, struct cpu_info *ci)
 	evcnt_attach_dynamic(&ci->ci_ev_dsp_saves,
 		EVCNT_TYPE_MISC, NULL, xname,
 		"dsp saves");
-	evcnt_attach_dynamic(&ci->ci_ev_tlbmisses,
-		EVCNT_TYPE_TRAP, NULL, xname,
-		"tlb misses");
 
 #ifdef MULTIPROCESSOR
 	if (ci != &cpu_info_store) {

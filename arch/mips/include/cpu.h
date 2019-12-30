@@ -110,7 +110,6 @@ struct cpu_info {
 	struct evcnt ci_ev_fpu_saves;	/* fpu save counter */
 	struct evcnt ci_ev_dsp_loads;	/* dsp load counter */
 	struct evcnt ci_ev_dsp_saves;	/* dsp save counter */
-	struct evcnt ci_ev_tlbmisses;
 
 	/*
 	 * Per-cpu pmap information

@@ -495,12 +495,6 @@ MIPSX(tlb_miss_common):
 #endif
 	tlbwr					#19: write to tlb
 	sll	$0, $0, 3			#1a: standard nop (ehb)
-#if (MIPS3 + MIPS64 + MIPS64R2) > 0
-	lui	k1, %hi(CPUVAR(EV_TLBMISSES))	#1b: k1=hi of tlbmisses
-	REG_L	k0, %lo(CPUVAR(EV_TLBMISSES))(k1) #1c
-	REG_ADDU k0, 1				#1d
-	REG_S	k0, %lo(CPUVAR(EV_TLBMISSES))(k1) #1e
-#endif
 	eret					#1f: return from exception
 	.set	at
 #ifdef MIPS3_LOONGSON2
