@@ -227,8 +227,13 @@ mace_serial_init(const char *consdev)
 
 		/* XXX: hardcoded MACE iotag */
 		mace_init_bus();
+#ifdef _LP64
+		if (comcnattach(mace_isa_memt, MIPS_PHYS_TO_XKPHYS_UNCACHED(MACE_BASE) + base,
+		    speed, COM_FREQ, COM_TYPE_NORMAL, comcnmode) == 0)
+#else
 		if (comcnattach(mace_isa_memt, MACE_BASE + base,
 		    speed, COM_FREQ, COM_TYPE_NORMAL, comcnmode) == 0)
+#endif
 			return (1);
 	}
 #endif
