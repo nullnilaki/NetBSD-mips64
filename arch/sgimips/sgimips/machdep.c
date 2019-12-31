@@ -226,8 +226,11 @@ uint8_t *bootinfo;			/* pointer to bootinfo structure */
 static uint8_t bi_buf[BOOTINFO_SIZE];	/* buffer to store bootinfo data */
 static const char *bootinfo_msg = NULL;
 
+#ifdef _LP64
+#define ARCS_VECTOR MIPS_PHYS_TO_XKPHYS_CACHED(0x00001000)
+#else
 #define ARCS_VECTOR MIPS_PHYS_TO_KSEG0(0x00001000)
-
+#endif
 /*
  * Do all the stuff that locore normally does before calling main().
  * Process arguments passed to us by the ARCS firmware.
