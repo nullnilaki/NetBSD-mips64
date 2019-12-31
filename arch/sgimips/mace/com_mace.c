@@ -97,8 +97,13 @@ com_mace_attach(device_t parent, device_t self, void *aux)
 	 */
 	ioh = maa->maa_sh + maa->maa_offset;
 	/* note that ioh on mac is *also* the iobase address */
+#ifdef _LP64
+	com_init_regs(&sc->sc_regs, mace_isa_memt, ioh,
+	    MIPS_PHYS_TO_XKPHYS_UNCACHED(MACE_BASE) + maa->maa_offset);
+#else
 	com_init_regs(&sc->sc_regs, mace_isa_memt, ioh,
 	    MACE_BASE + maa->maa_offset);
+#endif
 
 	sc->sc_frequency = COM_FREQ;
 
