@@ -303,6 +303,10 @@ mips_fixup_addr(const uint32_t *stubp)
 			used |= (1 << insn.IType.rt);
 			break;
 #ifdef _LP64
+		case OP_DADDIU:
+			regs[insn.IType.rt] = (regs[insn.IType.rs] + (int16_t)insn.IType.imm);
+			used |= (1 << insn.IType.rt);
+			break;
 		case OP_LD:
 			if ((used & (1 << insn.IType.rs)) == 0) {
 				errstr = "LD";
@@ -392,10 +396,18 @@ mips_fixup_addr(const uint32_t *stubp)
 			case OP_DSRA32:	/* force to 32-bits */
 				if (regs[insn.RType.rd] != regs[insn.RType.rt]
 				    || (used & (1 << insn.RType.rt)) == 0
-				    || regs[insn.RType.shamt] != 0) {
-					errstr = "AND";
+				    || insn.RType.shamt != 0) {
+					errstr = "DSLL/DSRA";
 					goto out;
 				}
+				regs[insn.RType.rd] =
+				    regs[insn.RType.rt] << (insn.RType.shamt + 32);
+				used |= (1 << insn.RType.rd);
+				break;
+			case OP_DADDU:
+				regs[insn.RType.rd] =
+				    regs[insn.RType.rs] + regs[insn.RType.rt];
+				used |= (1 << insn.RType.rd);
 				break;
 #endif
 			case OP_SLL:	/* nop */
