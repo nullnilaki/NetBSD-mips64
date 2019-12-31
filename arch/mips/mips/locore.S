@@ -68,6 +68,7 @@ RCSID("$NetBSD: locore.S,v 1.220 2019/09/05 15:48:13 skrll Exp $")
 #include "assym.h"
 
 	.set	noreorder
+	.align  3
 
 	.globl	start
 	.globl	_C_LABEL(kernel_text)		# libkvm refers this
@@ -81,10 +82,17 @@ _C_LABEL(kernel_text):
 	mtc0	k0, MIPS_COP_0_STATUS
 	COP0_SYNC
 
+#if defined(emips)
 	/* Known state: BEV, coprocessors disabled. */
 	/* Leaving TS | RE alone (for emips) */
 	and	k0, MIPS_SR_TS | MIPS3_SR_RE
+#endif
+#if defined(sgimips)
+	nop
+#else
 	mtc0	k0, MIPS_COP_0_STATUS
+	COP0_SYNC
+#endif
 	mtc0	zero, MIPS_COP_0_CAUSE
 	COP0_SYNC
 
