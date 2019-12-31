@@ -199,6 +199,7 @@ arcbios_cngetc(dev_t dev)
 void
 arcbios_cnputc(dev_t dev, int c)
 {
+#ifdef _LP64
     char buf[4];
     long  cnt;
 
@@ -212,4 +213,10 @@ arcbios_cnputc(dev_t dev, int c)
     }
 
 	arcbios_Write(ARCBIOS_STDOUT, &buf[0], cnt, &cnt);
+#else
+	u_long count;
+	char ch = c;
+
+	arcbios_Write(ARCBIOS_STDOUT, &ch, 1, &count);
+#endif
 }
