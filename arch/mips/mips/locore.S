@@ -882,8 +882,8 @@ END(stacktrace)
 
 	.section .stub, "ax"
 NESTED_NOPROFILE(tlb_update_addr, 0, ra)
-	lui	v0,%hi(_C_LABEL(mips_locore_jumpvec)+LJV_TLB_UPDATE_ADDR)
-	PTR_L	t9,%lo(_C_LABEL(mips_locore_jumpvec)+LJV_TLB_UPDATE_ADDR)(v0)
+	dla v0, _C_LABEL(mips_locore_jumpvec)+LJV_TLB_UPDATE_ADDR
+	ld 	t9, 0(v0) 
 	jr	t9
 	 nop
 END(tlb_update_addr)
