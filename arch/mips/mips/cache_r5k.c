@@ -98,8 +98,13 @@ r5k_picache_sync_all(void)
          */
         mips_intern_dcache_sync_all();
 	__asm volatile("sync");
+#ifdef _LP64
+        mips_intern_icache_sync_range_index(MIPS_PHYS_TO_XKPHYS_CACHED(0),
+            mci->mci_picache_size);
+#else
         mips_intern_icache_sync_range_index(MIPS_KSEG0_START,
             mci->mci_picache_size);
+#endif
 }
 
 void
@@ -126,8 +131,11 @@ r5k_picache_sync_range_index(vaddr_t va, vsize_t size)
 	 * bits that determine the cache index, and make a KSEG0
 	 * address out of them.
 	 */
+#ifdef _LP64
+	va = MIPS_PHYS_TO_XKPHYS_CACHED(va & way_mask);
+#else
 	va = MIPS_PHYS_TO_KSEG0(va & way_mask);
-
+#endif
 	eva = round_line(va + size, line_size);
 	va = trunc_line(va, line_size);
 	size = eva - va;
@@ -158,8 +166,13 @@ r5k_pdcache_wbinv_all(void)
 	 * Since we're hitting the whole thing, we don't have to
 	 * worry about the N different "ways".
 	 */
+#ifdef _LP64
+	mips_intern_pdcache_wbinv_range_index(MIPS_PHYS_TO_XKPHYS_CACHED(0),
+	    mci->mci_pdcache_size);
+#else
 	mips_intern_pdcache_wbinv_range_index(MIPS_KSEG0_START,
 	    mci->mci_pdcache_size);
+#endif
 }
 
 void
@@ -178,7 +191,11 @@ r5k_pdcache_wbinv_range_index(vaddr_t va, vsize_t size)
 	 * bits that determine the cache index, and make a KSEG0
 	 * address out of them.
 	 */
+#ifdef _LP64
+	va = MIPS_PHYS_TO_XKPHYS_CACHED(va & way_mask);
+#else
 	va = MIPS_PHYS_TO_KSEG0(va & way_mask);
+#endif
 	eva = round_line(va + size, line_size);
 	va = trunc_line(va, line_size);
 	size = eva - va;
@@ -188,8 +205,13 @@ r5k_pdcache_wbinv_range_index(vaddr_t va, vsize_t size)
 	 * everything.
 	 */
 	if (size >= way_size) {
+#ifdef _LP64
+		mips_intern_pdcache_wbinv_range_index(MIPS_PHYS_TO_XKPHYS_CACHED(0),
+		    mci->mci_pdcache_size);
+#else
 		mips_intern_pdcache_wbinv_range_index(MIPS_KSEG0_START,
 		    mci->mci_pdcache_size);
+#endif
 		return;
 	}
 
@@ -413,8 +435,11 @@ CTASSERT(R5K_Page_Invalidate_S == (CACHEOP_R4K_HIT_WB_INV|CACHE_R4K_SD));
 void
 r5k_sdcache_wbinv_all(void)
 {
-
+#ifdef _LP64
+	r5k_sdcache_wbinv_range(MIPS_PHYS_TO_XKPHYS_CACHED(0), mips_cache_info.mci_sdcache_size);
+#else
 	r5k_sdcache_wbinv_range(MIPS_PHYS_TO_KSEG0(0), mips_cache_info.mci_sdcache_size);
+#endif
 }
 
 void
@@ -427,7 +452,11 @@ r5k_sdcache_wbinv_range_index(vaddr_t va, vsize_t size)
 	 * bits that determine the cache index, and make a KSEG0
 	 * address out of them.
 	 */
+#ifdef _LP64
+	va = MIPS_PHYS_TO_XKPHYS_CACHED(va & (mips_cache_info.mci_sdcache_size - 1));
+#else
 	va = MIPS_PHYS_TO_KSEG0(va & (mips_cache_info.mci_sdcache_size - 1));
+#endif
 	r5k_sdcache_wbinv_range((intptr_t)va, size);
 }
 

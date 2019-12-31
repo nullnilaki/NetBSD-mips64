@@ -42,8 +42,13 @@
  *	Enable and clear out the R5k secondary (unified) cache.
  */
 LEAF_NOPROFILE(r5k_enable_sdcache)
+#ifdef _LP64
+	INT_L	t2, _C_LABEL(mips_cache_info)+MCI_SDCACHE_SIZE
+	PTR_LA	t1, 0x9800000000000000  #MIPS_PHYS_TO_XKPHYS_CACHED(0)
+#else
 	INT_L	t2, _C_LABEL(mips_cache_info)+MCI_SDCACHE_SIZE
 	PTR_LA	t1, MIPS_KSEG0_START
+#endif
 
 	beq	t2, zero, 3f		# if no sdcache, we can bail now
 	nop
@@ -51,7 +56,11 @@ LEAF_NOPROFILE(r5k_enable_sdcache)
 	PTR_ADDU t2, t1, t2
 
 	PTR_LA	v0, 1f
+#ifdef _LP64
+	or	v0, 0x9000000000000000  #MIPS_PHYS_TO_XKPHYS_UNCACHED(0)
+#else
 	or	v0, MIPS_KSEG1_START
+#endif
 
 	j	v0			# run the rest from uncached space
 	nop
