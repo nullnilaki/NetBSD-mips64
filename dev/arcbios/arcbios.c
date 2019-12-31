@@ -199,8 +199,17 @@ arcbios_cngetc(dev_t dev)
 void
 arcbios_cnputc(dev_t dev, int c)
 {
-	u_long count;
-	char ch = c;
+    char buf[4];
+    long  cnt;
 
-	arcbios_Write(ARCBIOS_STDOUT, &ch, 1, &count);
+    if (c == '\n') {
+        buf[0] = '\r';
+        buf[1] = c;
+        cnt = 2;
+    } else {
+        buf[0] = c;
+        cnt = 1;
+    }
+
+	arcbios_Write(ARCBIOS_STDOUT, &buf[0], cnt, &cnt);
 }
