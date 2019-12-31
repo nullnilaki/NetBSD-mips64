@@ -716,7 +716,6 @@ pmap_md_alloc_poolpage(int flags)
 vaddr_t
 pmap_md_map_poolpage(paddr_t pa, size_t len)
 {
-
 	struct vm_page * const pg = PHYS_TO_VM_PAGE(pa);
 	vaddr_t va = pmap_md_pool_phystov(pa);
 	KASSERT(cold || pg != NULL);
@@ -1060,7 +1059,10 @@ pmap_md_pool_phystov(paddr_t pa)
 {
 #ifdef _LP64
 	KASSERT(mips_options.mips3_xkphys_cached);
-	return MIPS_PHYS_TO_XKPHYS_CACHED(pa);
+	if (MIPS_XKSEG_P(pa))
+		return MIPS_PHYS_TO_XKPHYS_CACHED(pa);
+	return MIPS_PHYS_TO_KSEG0(pa);
+
 #else
 	KASSERT((pa & ~MIPS_PHYS_MASK) == 0);
 	return MIPS_PHYS_TO_KSEG0(pa);
