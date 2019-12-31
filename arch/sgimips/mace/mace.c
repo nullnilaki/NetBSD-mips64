@@ -317,8 +317,13 @@ mace_intr(int irqs)
 
 	/* irq 4 is the ISA cascade interrupt.  Must handle with care. */
 	if (irqs & (1 << 4)) {
+#ifdef _LP64
+		isa_irq = mips3_ld(MIPS_PHYS_TO_XKPHYS_UNCACHED(MACE_BASE
+		    + MACE_ISA_INT_STATUS));
+#else
 		isa_irq = mips3_ld(MIPS_PHYS_TO_KSEG1(MACE_BASE
 		    + MACE_ISA_INT_STATUS));
+#endif
 		for (i = 0; i < MACE_NINTR; i++) {
 			if ((maceintrtab[i].irq == (1 << 4)) &&
 			    (isa_irq & maceintrtab[i].intrmask)) {
