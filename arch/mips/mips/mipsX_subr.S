@@ -574,9 +574,16 @@ VECTOR(MIPSX(cache), unknown)
 	and	k0, k1					#02
 	li	k1, MIPS_KSEG1_START			#03
 	or	k0, k1					#04
+#ifdef _LP64
+	dla k1, (CPUVAR(CURLWP))
+	ld 	k1, 0(k1)		#07: k1=lo of curlwp
+	jr	k0					#06
+	 nop
+#esle
 	lui	k1, %hi(CPUVAR(CURLWP))			#05: k1=hi of curlwp
 	jr	k0					#06
 	 PTR_L	k1, %lo(CPUVAR(CURLWP))(k1)		#07: k1=lo of curlwp
+#endif
 _VECTOR_END(MIPSX(cache))
 
 /*
@@ -615,20 +622,34 @@ VECTOR(MIPSX(exception), unknown)
 						#  shifted left by 2 bits so
 						#  we dont have to shift.
 	PTR_L	k0, 0(k0)			#09: get the function address
+#ifdef _LP64
+	dla k1, (CPUVAR(CURLWP))
+	ld 	k1, 0(k1)		#07: k1=lo of curlwp
+	jr	k0				#0b: jump to the function
+	 nop					#0d
+#else
 	lui	k1, %hi(CPUVAR(CURLWP))		#0a: k1=hi of curlwp
 	jr	k0				#0b: jump to the function
 	 PTR_L	k1, %lo(CPUVAR(CURLWP))(k1)	#0c: k1=lo of curlwp
 	nop					#0d
+#endif
 	nop					#0e
 #ifndef _LP64
 	nop					#0f
 #endif
 	.p2align 4
 MIPSX(nopagetable):
+#ifdef _LP64
+	dla k1, (CPUVAR(CURLWP))
+	ld 	k1, 0(k1)
+	j	MIPSX(slowfault)		#11: no page table present
+	 nop					#13: branch delay slot
+#else
 	lui	k1, %hi(CPUVAR(CURLWP))		#10: k1=hi of curlwp
 	j	MIPSX(slowfault)		#11: no page table present
 	 PTR_L	k1, %lo(CPUVAR(CURLWP))(k1)	#12: k1=lo of curlwp
 	nop					#13: branch delay slot
+#endif
 	.set	at
 _VECTOR_END(MIPSX(exception))
 
@@ -644,9 +665,17 @@ VECTOR(MIPSX(intr), unknown)
 	 nop					#04:  branch deay
 	j	MIPSX(kern_intr)		#05: nope, kernel intr
 1:
+#ifdef _LP64
+	 nop
+	dla k1, (CPUVAR(CURLWP))
+	ld 	k1, 0(k1)
+	j	MIPSX(user_intr)		#07: user intr
+	 nop
+#else
 	lui	k1, %hi(CPUVAR(CURLWP))		#06: k1=hi of curlwp
 	j	MIPSX(user_intr)		#07: user intr
 	 PTR_L	k1, %lo(CPUVAR(CURLWP))(k1)	#08: k1=lo of curlwp
+#endif
 	.set	at
 _VECTOR_END(MIPSX(intr))
 
@@ -1435,9 +1464,15 @@ MIPSX(user_gen_exception_common):
 /*
  * We have pending asynchronous traps; all the state is already saved.
  */
+#ifdef _LP64
+	dla ra, (MIPSX(user_return))	# return directly to user return
+	j	_C_LABEL(ast)
+	 nop
+#else
 	lui	ra, %hi(MIPSX(user_return))	# return directly to user return
 	j	_C_LABEL(ast)
 	 PTR_ADDIU ra, %lo(MIPSX(user_return))	# return directly to user return
+#endif
 	.set	at
 END(MIPSX(user_gen_exception))
 
@@ -1754,9 +1789,15 @@ NESTED_NOPROFILE(MIPSX(systemcall), CALLFRAME_SIZ, ra)
 /*
  * We have pending asynchronous traps; all the state is already saved.
  */
+#ifdef _LP64
+	dla ra, (MIPSX(user_return))
+	j	_C_LABEL(ast)
+	 nop
+#else
 	lui	ra, %hi(MIPSX(user_return))	# return directly to user return
 	j	_C_LABEL(ast)
 	 PTR_ADDIU ra, %lo(MIPSX(user_return))	# return directly to user return
+#endif
 END(MIPSX(systemcall))
 
 /*
