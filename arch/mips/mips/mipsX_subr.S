@@ -532,14 +532,12 @@ VECTOR(MIPSX(xtlb_miss), unknown)
 	PTR_SRL k1, XSEGSHIFT+XSEGLENGTH+2	#03: clear valid bits
 	bnez	k1, MIPSX(nopagetable)		#04: not legal address
 	 PTR_SRA k0, XSEGSHIFT - PTR_SCALESHIFT	#05: k0=seg offset (almost)
-	bgez	k0, 1f				#06: k0<0 -> kernel fault
-	 lui	k1, %hi(CPUVAR(PMAP_SEGTAB))	#07: k1=hi of segtab
-	PTR_ADDU k1, 1 << PTR_SCALESHIFT	#08: advance to kernel segtab
-1:
-	PTR_L	k1, %lo(CPUVAR(PMAP_SEGTAB))(k1)#09: k1=segment tab
+	dla k1, (CPUVAR(PMAP_SEGTAB))
+	ld 	k1, 0(k1)
 	andi	k0, (NSEGPG-1)<<PTR_SCALESHIFT	#0a: k0=seg offset (mask 0x3)
 	PTR_ADDU k1, k0				#0b: k1=seg entry address
 	dmfc0	k0, MIPS_COP_0_BAD_VADDR	#0c: k0=bad address (again)
+	MFC0_HAZARD				#01: nop
 	PTR_L	k1, 0(k1)			#0d: k1=seg entry address
 #else
 	lui	k1, %hi(CPUVAR(PMAP_SEG0TAB))	#02: k1=hi of seg0tab
