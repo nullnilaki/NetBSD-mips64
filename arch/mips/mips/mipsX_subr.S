@@ -532,12 +532,14 @@ VECTOR(MIPSX(xtlb_miss), unknown)
 	PTR_SRL k1, XSEGSHIFT+XSEGLENGTH+2	#03: clear valid bits
 	bnez	k1, MIPSX(nopagetable)		#04: not legal address
 	 PTR_SRA k0, XSEGSHIFT - PTR_SCALESHIFT	#05: k0=seg offset (almost)
-	dla k1, (CPUVAR(PMAP_SEGTAB))
-	ld 	k1, 0(k1)
+	bgez	k0, 1f				#06: k0<0 -> kernel fault
+	 lui	k1, %hi(CPUVAR(PMAP_SEGTAB))	#07: k1=hi of segtab
+	PTR_ADDU k1, 1 << PTR_SCALESHIFT	#08: advance to kernel segtab
+1:
+	PTR_L	k1, %lo(CPUVAR(PMAP_SEGTAB))(k1)#09: k1=segment tab
 	andi	k0, (NSEGPG-1)<<PTR_SCALESHIFT	#0a: k0=seg offset (mask 0x3)
 	PTR_ADDU k1, k0				#0b: k1=seg entry address
 	dmfc0	k0, MIPS_COP_0_BAD_VADDR	#0c: k0=bad address (again)
-	MFC0_HAZARD				#01: nop
 	PTR_L	k1, 0(k1)			#0d: k1=seg entry address
 #else
 	lui	k1, %hi(CPUVAR(PMAP_SEG0TAB))	#02: k1=hi of seg0tab
@@ -574,9 +576,9 @@ VECTOR(MIPSX(cache), unknown)
 	and	k0, k1					#02
 	li	k1, MIPS_KSEG1_START			#03
 	or	k0, k1					#04
-	dla k1, (CPUVAR(CURLWP))			#05: k1=hi of curlwp
+	lui	k1, %hi(CPUVAR(CURLWP))			#05: k1=hi of curlwp
 	jr	k0					#06
-	 ld 	k1, 0(k1)		#07: k1=lo of curlwp
+	 PTR_L	k1, %lo(CPUVAR(CURLWP))(k1)		#07: k1=lo of curlwp
 _VECTOR_END(MIPSX(cache))
 
 /*
@@ -615,9 +617,9 @@ VECTOR(MIPSX(exception), unknown)
 						#  shifted left by 2 bits so
 						#  we dont have to shift.
 	PTR_L	k0, 0(k0)			#09: get the function address
-	dla k1, (CPUVAR(CURLWP))
+	lui	k1, %hi(CPUVAR(CURLWP))		#0a: k1=hi of curlwp
 	jr	k0				#0b: jump to the function
-	 ld 	k1, 0(k1) 	#0c: k1=lo of curlwp
+	 PTR_L	k1, %lo(CPUVAR(CURLWP))(k1)	#0c: k1=lo of curlwp
 	nop					#0d
 	nop					#0e
 #ifndef _LP64
@@ -625,7 +627,9 @@ VECTOR(MIPSX(exception), unknown)
 #endif
 	.p2align 4
 MIPSX(nopagetable):
+	lui	k1, %hi(CPUVAR(CURLWP))		#10: k1=hi of curlwp
 	j	MIPSX(slowfault)		#11: no page table present
+	 PTR_L	k1, %lo(CPUVAR(CURLWP))(k1)	#12: k1=lo of curlwp
 	nop					#13: branch delay slot
 	.set	at
 _VECTOR_END(MIPSX(exception))
@@ -641,11 +645,10 @@ VECTOR(MIPSX(intr), unknown)
 	bnez	k0, 1f				#03: yep, do it
 	 nop					#04:  branch deay
 	j	MIPSX(kern_intr)		#05: nope, kernel intr
-	nop
 1:
-	dla k1, (CPUVAR(CURLWP))
+	lui	k1, %hi(CPUVAR(CURLWP))		#06: k1=hi of curlwp
 	j	MIPSX(user_intr)		#07: user intr
-	 ld 	k1, 0(k1) 	#0c: k1=lo of curlwp
+	 PTR_L	k1, %lo(CPUVAR(CURLWP))(k1)	#08: k1=lo of curlwp
 	.set	at
 _VECTOR_END(MIPSX(intr))
 
@@ -1225,9 +1228,14 @@ NESTED_NOPROFILE(MIPSX(kern_intr), KERNFRAME_SIZ, ra)
 #else
 	mfc0	v0, MIPS_COP_0_STATUS		# read it
 	MFC0_HAZARD
-    ori v1, v0, MIPS_SR_INT_IE
-    xori    v1, v1, MIPS_SR_INT_IE
-    mtc0    v1, MIPS_COP_0_STATUS    # Disable interrupts
+#ifdef _LP64
+	ori v1, v0, MIPS_SR_INT_IE
+	xori    v1, v1, MIPS_SR_INT_IE
+	mtc0    v1, MIPS_COP_0_STATUS    # Disable interrupts
+#else
+	xor	v0, MIPS_SR_INT_IE		# disable interrupts
+	mtc0	v0, MIPS_COP_0_STATUS		# write it
+#endif
 #endif
 	COP0_SYNC
 
@@ -1288,6 +1296,7 @@ NESTED_NOPROFILE(MIPSX(user_reserved_insn), CALLFRAME_SIZ, ra)
 	 * Save a minimum of registers to see if this is rdhwr $3,$29
 	 */
 	KERN_ENTRY_ERRATA
+	/* K1 already has CURLWP */
 	PTR_L	k0, L_PCB(k1)			# XXXuvm_lwp_getuarea
 	PTR_ADDU k0, USPACE - TF_SIZ - CALLFRAME_SIZ
 
@@ -1350,8 +1359,6 @@ NESTED_NOPROFILE(MIPSX(user_gen_exception), CALLFRAME_SIZ, ra)
 	 */
 	KERN_ENTRY_ERRATA
 	/* K1 already has CURLWP */
-	dla k1, (CPUVAR(CURLWP))
-	ld 	k1, 0(k1) 	#0c: k1=lo of curlwp
 	PTR_L	k0, L_PCB(k1)			# XXXuvm_lwp_getuarea
 	PTR_ADDU k0, USPACE - TF_SIZ - CALLFRAME_SIZ
 	REG_S	AT, CALLFRAME_SIZ+TF_REG_AST(k0)
@@ -1430,9 +1437,9 @@ MIPSX(user_gen_exception_common):
 /*
  * We have pending asynchronous traps; all the state is already saved.
  */
- 	dla ra, (MIPSX(user_return))
+	lui	ra, %hi(MIPSX(user_return))	# return directly to user return
 	j	_C_LABEL(ast)
-	 nop	# return directly to user return
+	 PTR_ADDIU ra, %lo(MIPSX(user_return))	# return directly to user return
 	.set	at
 END(MIPSX(user_gen_exception))
 
@@ -1586,9 +1593,14 @@ NESTED_NOPROFILE(MIPSX(user_intr), CALLFRAME_SIZ, ra)
 #else
 	mfc0	v1, MIPS_COP_0_STATUS
 	MFC0_HAZARD
-    ori v0, v1, MIPS_SR_INT_IE
-    xori    v0, v0, MIPS_SR_INT_IE
-    mtc0    v0, MIPS_COP_0_STATUS    # Disable interrupts
+#ifdef _LP64
+	ori v0, v1, MIPS_SR_INT_IE
+	xori    v0, v0, MIPS_SR_INT_IE
+#else
+	and	v0, v1, MIPS_SR_INT_IE		# clear interrupt enable
+	xor	v0, v1
+#endif
+	mtc0	v0, MIPS_COP_0_STATUS		# interrupts are disabled
 #endif
 	COP0_SYNC
 
@@ -1744,9 +1756,9 @@ NESTED_NOPROFILE(MIPSX(systemcall), CALLFRAME_SIZ, ra)
 /*
  * We have pending asynchronous traps; all the state is already saved.
  */
- 	dla ra, (MIPSX(user_return))
+	lui	ra, %hi(MIPSX(user_return))	# return directly to user return
 	j	_C_LABEL(ast)
-	 nop
+	 PTR_ADDIU ra, %lo(MIPSX(user_return))	# return directly to user return
 END(MIPSX(systemcall))
 
 /*
@@ -2078,9 +2090,13 @@ LEAF(MIPSX(tlb_update_addr))
 	di	ta0				# Disable interrupts
 #else
 	mfc0	ta0, MIPS_COP_0_STATUS		# Save the status register.
-    ori ta1, ta0, MIPS_SR_INT_IE
-    xori    ta1, ta1, MIPS_SR_INT_IE
-    mtc0    ta1, MIPS_COP_0_STATUS    # Disable interrupts
+#ifdef _LP64
+	ori ta1, ta0, MIPS_SR_INT_IE
+	xori    ta1, ta1, MIPS_SR_INT_IE
+	mtc0    ta1, MIPS_COP_0_STATUS
+#else
+	mtc0	zero, MIPS_COP_0_STATUS		# Disable interrupts
+#endif
 #endif
 	COP0_SYNC
 #if (PGSHIFT & 1) == 0
@@ -2206,9 +2222,13 @@ END(MIPSX(tlb_update_addr))
  */
 LEAF(MIPSX(tlb_read_entry))
 	mfc0	v1, MIPS_COP_0_STATUS		# Save the status register.
-    ori v0, v1, MIPS_SR_INT_IE
-    xori    v0, v0, MIPS_SR_INT_IE
-    mtc0    v0, MIPS_COP_0_STATUS    # Disable interrupts
+#ifdef _LP64
+	ori v0, v1, MIPS_SR_INT_IE
+	xori    v0, v0, MIPS_SR_INT_IE
+	mtc0    v0, MIPS_COP_0_STATUS
+#else
+	mtc0	zero, MIPS_COP_0_STATUS		# Disable interrupts
+#endif
 	COP0_SYNC
 #ifdef MIPS3
 	nop
@@ -2257,9 +2277,13 @@ END(MIPSX(tlb_read_entry))
  */
 LEAF_NOPROFILE(MIPSX(tlb_invalidate_addr))
 	mfc0	ta0, MIPS_COP_0_STATUS		# save status register
-    ori ta1, ta0, MIPS_SR_INT_IE
-    xori    ta1, ta1, MIPS_SR_INT_IE
-    mtc0    ta1, MIPS_COP_0_STATUS    # Disable interrupts
+#ifdef _LP64
+	ori ta1, ta0, MIPS_SR_INT_IE
+	xori    ta1, ta1, MIPS_SR_INT_IE
+	mtc0    ta1, MIPS_COP_0_STATUS
+#else
+	mtc0	zero, MIPS_COP_0_STATUS		# disable interrupts
+#endif
 	COP0_SYNC
 
 #if (PGSHIFT & 1) == 0
@@ -2357,9 +2381,13 @@ END(MIPSX(tlb_invalidate_addr))
  */
 LEAF_NOPROFILE(MIPSX(tlb_invalidate_asids))
 	mfc0	v1, MIPS_COP_0_STATUS		# save status register
-    ori v0, v1, MIPS_SR_INT_IE
-    xori    v0, v0, MIPS_SR_INT_IE
-    mtc0    v0, MIPS_COP_0_STATUS    # Disable interrupts
+#ifdef _LP64
+	ori v0, v1, MIPS_SR_INT_IE
+	xori    v0, v0, MIPS_SR_INT_IE
+	mtc0    v0, MIPS_COP_0_STATUS
+#else
+	mtc0	zero, MIPS_COP_0_STATUS		# disable interrupts
+#endif
 	COP0_SYNC
 
 	_MFC0	t0, MIPS_COP_0_TLB_HI		# Save the current ASID.
@@ -2425,9 +2453,13 @@ END(MIPSX(tlb_invalidate_asids))
  */
 LEAF_NOPROFILE(MIPSX(tlb_invalidate_globals))
 	mfc0	v1, MIPS_COP_0_STATUS		# save status register
-    ori v0, v1, MIPS_SR_INT_IE
-    xori    v0, ta1, MIPS_SR_INT_IE
-    mtc0    v0, MIPS_COP_0_STATUS    # Disable interrupts
+#ifdef _LP64
+	ori v0, v1, MIPS_SR_INT_IE
+	xori    v0, ta1, MIPS_SR_INT_IE
+	mtc0    v0, MIPS_COP_0_STATUS    # Disable interrupts
+#else
+	mtc0	zero, MIPS_COP_0_STATUS		# disable interrupts
+#endif
 	COP0_SYNC
 
 	_MFC0	t0, MIPS_COP_0_TLB_HI		# save current ASID
@@ -2483,9 +2515,13 @@ END(MIPSX(tlb_invalidate_globals))
  */
 LEAF_NOPROFILE(MIPSX(tlb_invalidate_all))
 	mfc0	ta0, MIPS_COP_0_STATUS		# save status register
-    ori ta1, ta0, MIPS_SR_INT_IE
-    xori    ta1, ta1, MIPS_SR_INT_IE
-    mtc0    ta1, MIPS_COP_0_STATUS    # Disable interrupts
+#ifdef _LP64
+	ori ta1, ta0, MIPS_SR_INT_IE
+	xori    ta1, ta1, MIPS_SR_INT_IE
+	mtc0    ta1, MIPS_COP_0_STATUS    # Disable interrupts
+#else
+	mtc0	zero, MIPS_COP_0_STATUS		# disable interrupts
+#endif
 	COP0_SYNC
 
 	INT_L	a0, _C_LABEL(mips_options) + MO_NUM_TLB_ENTRIES
