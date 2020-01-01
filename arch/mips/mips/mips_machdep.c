@@ -2093,13 +2093,11 @@ mips_page_physload(vaddr_t vkernstart, vaddr_t vkernend,
 
 	if (MIPS_XKPHYS_P(vkernstart)) {
 		kernstart = MIPS_XKPHYS_TO_PHYS(trunc_page(vkernstart));
-		printf("XKPHYS_TO_PHYS = kernstart = %lx\n", kernstart);
 	} else {
 		kernstart = MIPS_KSEG0_TO_PHYS(trunc_page(vkernstart));
 	}
 	if (MIPS_XKPHYS_P(vkernend)) {
 		kernend = MIPS_XKPHYS_TO_PHYS(round_page(vkernend));
-		printf("XKPHYS_TO_PHYS = kernend = %lx\n", kernend);
 	} else {
 		kernend = MIPS_KSEG0_TO_PHYS(round_page(vkernend));
 	}
