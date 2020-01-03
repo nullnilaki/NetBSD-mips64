@@ -1061,10 +1061,7 @@ pmap_md_pool_phystov(paddr_t pa)
 	KASSERT(mips_options.mips3_xkphys_cached);
 	if (MIPS_XKSEG_P(pa))
 		return MIPS_PHYS_TO_XKPHYS_CACHED(pa);
-	return MIPS_PHYS_TO_KSEG0(pa);
-
-#else
+#endif
 	KASSERT((pa & ~MIPS_PHYS_MASK) == 0);
 	return MIPS_PHYS_TO_KSEG0(pa);
-#endif
 }
