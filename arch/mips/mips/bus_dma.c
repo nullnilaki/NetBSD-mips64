@@ -198,8 +198,11 @@ _bus_dmamap_load_buffer(bus_dma_tag_t t, bus_dmamap_t map,
 				 * All physical addresses can be accessed
 				 * via XKPHYS.
 				 */
-		    		ds->_ds_vaddr =
-				    MIPS_PHYS_TO_XKPHYS_CACHED(curaddr);
+				if (MIPS_XKSEG_P(curaddr)) {
+					ds->_ds_vaddr = MIPS_PHYS_TO_XKPHYS_CACHED(curaddr);
+				} else {
+					ds->_ds_vaddr = MIPS_PHYS_TO_KSEG0(curaddr);
+				}
 #endif
 			}
 			/* Make sure this is a valid kernel address */
@@ -659,10 +662,18 @@ _bus_dmamap_load_raw(bus_dma_tag_t t, bus_dmamap_t map,
 	for (; error == 0 && nsegs-- > 0; segs++) {
 		void *kva;
 #ifdef _LP64
-		if (cached_p) {
-			kva = (void *)MIPS_PHYS_TO_XKPHYS_CACHED(segs->ds_addr);
+		if (MIPS_XKSEG_P(segs->ds_addr)) {
+			if (cached_p) {
+				kva = (void *)MIPS_PHYS_TO_XKPHYS_CACHED(segs->ds_addr);
+			} else {
+				kva = (void *)MIPS_PHYS_TO_XKPHYS_UNCACHED(segs->ds_addr);
+			}
 		} else {
-			kva = (void *)MIPS_PHYS_TO_XKPHYS_UNCACHED(segs->ds_addr);
+			if (cached_p) {
+				kva = (void *)MIPS_PHYS_TO_KSEG0(segs->ds_addr);
+			} else {
+				kva = (void *)MIPS_PHYS_TO_KSEG1(segs->ds_addr);
+			}
 		}
 #else
 		if (segs->ds_addr >= MIPS_PHYS_MASK)
@@ -1089,12 +1100,23 @@ _bus_dmamem_map(bus_dma_tag_t t, bus_dma_segment_t *segs, int nsegs,
 #ifdef _LP64
 	if (nsegs == 1) {
 		if (((mips_options.mips_cpu_flags & CPU_MIPS_D_CACHE_COHERENT) == 0)
-		&&  (flags & BUS_DMA_COHERENT))
-			*kvap = (void *)MIPS_PHYS_TO_XKPHYS_UNCACHED(
-			    segs[0].ds_addr);
-		else
-			*kvap = (void *)MIPS_PHYS_TO_XKPHYS_CACHED(
-			    segs[0].ds_addr);
+		&&  (flags & BUS_DMA_COHERENT)) {
+			if (MIPS_XKSEG_P(segs[0].ds_addr)) {
+				*kvap = (void *)MIPS_PHYS_TO_XKPHYS_UNCACHED(
+					segs[0].ds_addr);
+			} else {
+				*kvap = (void *)MIPS_PHYS_TO_KSEG1(
+					segs[0].ds_addr);
+			}
+		} else {
+			if (MIPS_XKSEG_P(segs[0].ds_addr)) {
+				*kvap = (void *)MIPS_PHYS_TO_XKPHYS_CACHED(
+					segs[0].ds_addr);
+			} else {
+				*kvap = (void *)MIPS_PHYS_TO_KSEG0(
+					segs[0].ds_addr);
+			}
+		}
 		return 0;
 	}
 #else
