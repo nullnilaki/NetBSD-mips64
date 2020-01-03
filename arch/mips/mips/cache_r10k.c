@@ -65,6 +65,7 @@
 #include <mips/cache.h>
 #include <mips/cache_r4k.h>
 #include <mips/cache_r10k.h>
+#include <mips/locore.h>
 
 /*
  * Cache operations for R10000-style caches:
@@ -83,7 +84,11 @@ void
 r10k_icache_sync_all(void)
 {
 	const struct mips_cache_info * const mci = &mips_cache_info;
+#ifdef _LP64
+	vaddr_t va = MIPS_PHYS_TO_XKPHYS_CACHED(0);
+#else
 	vaddr_t va = MIPS_PHYS_TO_KSEG0(0);
+#endif
 	vaddr_t eva = va + mci->mci_picache_way_size;
 
 	mips_dcache_wbinv_all();
@@ -136,7 +141,11 @@ r10k_icache_sync_range_index(vaddr_t va, vsize_t size)
 	 * bits that determine the cache index, and make a KSEG0
 	 * address out of them.
 	 */
+#ifdef _LP64
+	va = MIPS_PHYS_TO_XKPHYS_CACHED(orig_va & mci->mci_picache_way_mask);
+#else
 	va = MIPS_PHYS_TO_KSEG0(orig_va & mci->mci_picache_way_mask);
+#endif
 
 	eva = round_line(va + size);
 	va = trunc_line(va);
@@ -159,7 +168,11 @@ void
 r10k_pdcache_wbinv_all(void)
 {
 	const struct mips_cache_info * const mci = &mips_cache_info;
+#ifdef _LP64
+	vaddr_t va = MIPS_PHYS_TO_XKPHYS_CACHED(0);
+#else
 	vaddr_t va = MIPS_PHYS_TO_KSEG0(0);
+#endif
 	vaddr_t eva = va + mci->mci_pdcache_way_size;
 
 	while (va < eva) {
@@ -195,7 +208,11 @@ r10k_pdcache_wbinv_range_index(vaddr_t va, vsize_t size)
 	 * bits that determine the cache index, and make a KSEG0
 	 * address out of them.
 	 */
+#ifdef _LP64
+	va = MIPS_PHYS_TO_XKPHYS_CACHED(va & mci->mci_pdcache_way_mask);
+#else
 	va = MIPS_PHYS_TO_KSEG0(va & mci->mci_pdcache_way_mask);
+#endif
 
 	eva = round_line(va + size);
 	va = trunc_line(va);
@@ -238,14 +255,18 @@ r10k_pdcache_wb_range(register_t va, vsize_t size)
 #undef round_line
 #undef trunc_line
 
-#define	round_line(x)	(((x) + mci->mci_sdcache_line_size - 1) & ~(mci->mci_sdcache_line_size - 1))
-#define	trunc_line(x)	((x) & ~(mci->mci_sdcache_line_size - 1))
+#define	round_line(x)	((register_t)((x) + mci->mci_sdcache_line_size - 1) & ~(register_t)(mci->mci_sdcache_line_size - 1))
+#define	trunc_line(x)	((x) & ~(register_t)(mci->mci_sdcache_line_size - 1))
 
 void
 r10k_sdcache_wbinv_all(void)
 {
 	const struct mips_cache_info * const mci = &mips_cache_info;
+#ifdef _LP64
+	vaddr_t va = MIPS_PHYS_TO_XKPHYS_CACHED(0);
+#else
 	vaddr_t va = MIPS_PHYS_TO_KSEG0(0);
+#endif
 	vaddr_t eva = va + mci->mci_sdcache_way_size;
 	vsize_t line_size = mci->mci_sdcache_line_size;
 
@@ -285,7 +306,11 @@ r10k_sdcache_wbinv_range_index(vaddr_t va, vsize_t size)
 	 * bits that determine the cache index, and make a KSEG0
 	 * address out of them.
 	 */
+#ifdef _LP64
+	va = MIPS_PHYS_TO_XKPHYS_CACHED(va & mci->mci_sdcache_way_mask);
+#else
 	va = MIPS_PHYS_TO_KSEG0(va & mci->mci_sdcache_way_mask);
+#endif
 
 	eva = round_line(va + size);
 	va = trunc_line(va);
