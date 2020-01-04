@@ -148,10 +148,17 @@ sq_match(device_t parent, cfdata_t cf, void *aux)
 	if (strcmp(ha->ha_name, cf->cf_name) == 0) {
 		vaddr_t reset, txstat;
 
+#ifdef _LP64
+		reset = MIPS_PHYS_TO_XKPHYS_UNCACHED(ha->ha_sh +
+		    ha->ha_dmaoff + ha->hpc_regs->enetr_reset);
+		txstat = MIPS_PHYS_TO_XKPHYS_UNCACHED(ha->ha_sh +
+		    ha->ha_devoff + (SEEQ_TXSTAT << 2));
+#else
 		reset = MIPS_PHYS_TO_KSEG1(ha->ha_sh +
 		    ha->ha_dmaoff + ha->hpc_regs->enetr_reset);
 		txstat = MIPS_PHYS_TO_KSEG1(ha->ha_sh +
 		    ha->ha_devoff + (SEEQ_TXSTAT << 2));
+#endif
 
 		if (platform.badaddr((void *)reset, sizeof(reset)))
 			return 0;
@@ -1313,7 +1320,11 @@ void
 sq_dump_buffer(paddr_t addr, psize_t len)
 {
 	u_int i;
+#ifdef _LP64
+	uint8_t *physaddr = (uint8_t *)MIPS_PHYS_TO_XKPHYS_UNCACHED(addr);
+#else
 	uint8_t *physaddr = (uint8_t *)MIPS_PHYS_TO_KSEG1(addr);
+#endif
 
 	if (len == 0)
 		return;

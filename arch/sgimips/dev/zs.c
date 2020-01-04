@@ -645,7 +645,11 @@ zs_get_chan_addr(int zs_unit, int channel)
 			panic("zs_get_chan_addr zs_unit != 0 on IP%d",
 								mach_type);
 
+#ifdef _LP64
+		addr = (struct zsdevice *) MIPS_PHYS_TO_XKPHYS_UNCACHED(0x1fbd9830);
+#else
 		addr = (struct zsdevice *) MIPS_PHYS_TO_KSEG1(0x1fbd9830);
+#endif
 		break;
 
 	default:

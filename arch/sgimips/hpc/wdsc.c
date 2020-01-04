@@ -101,9 +101,15 @@ wdsc_match(device_t parent, cfdata_t cf, void *aux)
 	if (strcmp(haa->ha_name, cf->cf_name) == 0) {
 		vaddr_t reset, asr, reg;
 
+#ifdef _LP64
+		reset = MIPS_PHYS_TO_XKPHYS_UNCACHED(haa->ha_sh + haa->ha_dmaoff +
+		    haa->hpc_regs->scsi0_ctl);
+		asr = MIPS_PHYS_TO_XKPHYS_UNCACHED(haa->ha_sh + haa->ha_devoff);
+#else
 		reset = MIPS_PHYS_TO_KSEG1(haa->ha_sh + haa->ha_dmaoff +
 		    haa->hpc_regs->scsi0_ctl);
 		asr = MIPS_PHYS_TO_KSEG1(haa->ha_sh + haa->ha_devoff);
+#endif
 
 		/* XXX: hpc1 offset due to SGIMIPS_BUS_SPACE_HPC brain damage */
 		asr = (asr + 3) & ~0x3;

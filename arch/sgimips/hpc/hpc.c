@@ -382,8 +382,13 @@ hpc_match(device_t parent, cfdata_t cf, void *aux)
 	if (mach_type == MACH_SGI_IP12 || mach_type == MACH_SGI_IP20 ||
 	    mach_type == MACH_SGI_IP22) {
 		/* Make sure it's actually there and readable */
+#ifdef _LP64
+		if (!platform.badaddr((void*)MIPS_PHYS_TO_XKPHYS_UNCACHED(ga->ga_addr),
+		    sizeof(uint32_t)))
+#else
 		if (!platform.badaddr((void*)MIPS_PHYS_TO_KSEG1(ga->ga_addr),
 		    sizeof(uint32_t)))
+#endif
 			return 1;
 	}
 
@@ -433,7 +438,11 @@ hpc_attach(device_t parent, device_t self, void *aux)
 
 	/* force big-endian mode */
 	if (hpctype == 15)
+#ifdef _LP64
+		*(uint32_t *)MIPS_PHYS_TO_XKPHYS_UNCACHED(ga->ga_addr+HPC1_BIGENDIAN) = 0;
+#else
 		*(uint32_t *)MIPS_PHYS_TO_KSEG1(ga->ga_addr+HPC1_BIGENDIAN) = 0;
+#endif
 
 	/*
 	 * All machines have only one HPC on the mainboard itself. ''Extra''
@@ -461,8 +470,13 @@ hpc_attach(device_t parent, device_t self, void *aux)
 	if (isioplus) {
 		int arb_slot;
 
+#ifdef _LP64
+		if (platform.badaddr(
+		    (void *)MIPS_PHYS_TO_XKPHYS_UNCACHED(HPC_BASE_ADDRESS_2), 4))
+#else
 		if (platform.badaddr(
 		    (void *)MIPS_PHYS_TO_KSEG1(HPC_BASE_ADDRESS_2), 4))
+#endif
 			arb_slot = GIO_SLOT_EXP1;
 		else
 			arb_slot = GIO_SLOT_EXP0;
@@ -509,7 +523,11 @@ hpc_attach(device_t parent, device_t self, void *aux)
 	sc->sc_base = ga->ga_addr;
 
 	hpc_read_eeprom(hpctype, normal_memt,
+#ifdef _LP64
+	    MIPS_PHYS_TO_XKPHYS_UNCACHED(sc->sc_base), ha.hpc_eeprom,
+#else
 	    MIPS_PHYS_TO_KSEG1(sc->sc_base), ha.hpc_eeprom,
+#endif
 	    sizeof(ha.hpc_eeprom));
 
 	hd = (hpctype == 3) ? hpc3_devices : hpc1_devices;
@@ -588,11 +606,17 @@ hpc_revision(struct hpc_softc *sc, struct gio_attach_args *ga)
 	if (mach_type == MACH_SGI_IP12 || mach_type == MACH_SGI_IP20) {
 		uint32_t reg;
 
+#ifdef _LP64
+		if (!platform.badaddr((void *)MIPS_PHYS_TO_XKPHYS_UNCACHED(ga->ga_addr +
+		    HPC1_BIGENDIAN), 4)) {
+			reg = *(uint32_t *)MIPS_PHYS_TO_XKPHYS_UNCACHED(ga->ga_addr +
+			    HPC1_BIGENDIAN);
+#else
 		if (!platform.badaddr((void *)MIPS_PHYS_TO_KSEG1(ga->ga_addr +
 		    HPC1_BIGENDIAN), 4)) {
 			reg = *(uint32_t *)MIPS_PHYS_TO_KSEG1(ga->ga_addr +
 			    HPC1_BIGENDIAN);
-
+#endif
 			if (((reg >> HPC1_REVSHIFT) & HPC1_REVMASK) ==
 			    HPC1_REV15)
 				return (15);
@@ -621,8 +645,13 @@ hpc_revision(struct hpc_softc *sc, struct gio_attach_args *ga)
 		 * slot 0 (good!) and we're only worried about that one
 		 * anyhow.
 		 */
+#ifdef _LP64
+		if (platform.badaddr((void *)MIPS_PHYS_TO_XKPHYS_UNCACHED(ga->ga_addr +
+		    HPC3_PBUS_CH7_BP), 4))
+#else
 		if (platform.badaddr((void *)MIPS_PHYS_TO_KSEG1(ga->ga_addr +
 		    HPC3_PBUS_CH7_BP), 4))
+#endif
 			return (15);
 		else
 			return (3);
@@ -666,11 +695,19 @@ hpc_blink(void *arg)
 
 	s = splhigh();
 
+#ifdef _LP64
+	value = *(volatile uint8_t *)MIPS_PHYS_TO_XKPHYS_UNCACHED(HPC_BASE_ADDRESS_0 +
+	    HPC1_AUX_REGS);
+	value ^= HPC1_AUX_CONSLED;
+	*(volatile uint8_t *)MIPS_PHYS_TO_XKPHYS_UNCACHED(HPC_BASE_ADDRESS_0 +
+	    HPC1_AUX_REGS) = value;
+#else
 	value = *(volatile uint8_t *)MIPS_PHYS_TO_KSEG1(HPC_BASE_ADDRESS_0 +
 	    HPC1_AUX_REGS);
 	value ^= HPC1_AUX_CONSLED;
 	*(volatile uint8_t *)MIPS_PHYS_TO_KSEG1(HPC_BASE_ADDRESS_0 +
 	    HPC1_AUX_REGS) = value;
+#endif
 	splx(s);
 
 	/*

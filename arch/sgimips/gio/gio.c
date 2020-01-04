@@ -208,8 +208,13 @@ gio_attach(device_t parent, device_t self, void *aux)
 		ga.ga_slot = -1;
 		ga.ga_addr = gfx_bases[i].base;
 		/* XXX */
+#ifdef _LP64
+		if (platform.badaddr((void *)MIPS_PHYS_TO_XKPHYS_UNCACHED(ga.ga_addr),
+		    sizeof(uint32_t)))
+#else
 		if (platform.badaddr((void *)MIPS_PHYS_TO_KSEG1(ga.ga_addr),
 		    sizeof(uint32_t)))
+#endif
 			continue;
 		ga.ga_iot = normal_memt;
 		if (bus_space_map(normal_memt, ga.ga_addr, 0,
@@ -256,8 +261,13 @@ gio_attach(device_t parent, device_t self, void *aux)
 		ga.ga_slot = slot_bases[i].slot;
 		ga.ga_addr = slot_bases[i].base;
 		/* XXX */
+#ifdef _LP64
+		if (platform.badaddr((void *)MIPS_PHYS_TO_XKPHYS_UNCACHED(ga.ga_addr),
+		    sizeof(uint32_t)))
+#else
 		if (platform.badaddr((void *)MIPS_PHYS_TO_KSEG1(ga.ga_addr),
 		    sizeof(uint32_t)))
+#endif
 			continue;
 		ga.ga_iot = normal_memt;
 		if (bus_space_map(normal_memt, ga.ga_addr, 0,
@@ -330,7 +340,11 @@ gio_search(device_t parent, cfdata_t cf, const int *ldesc, void *aux)
 		ga->ga_slot = cf->cf_loc[GIOCF_SLOT];
 		ga->ga_addr = cf->cf_loc[GIOCF_ADDR];
 		ga->ga_iot = normal_memt;
+#ifdef _LP64
+		ga->ga_ioh = MIPS_PHYS_TO_XKPHYS_UNCACHED(ga->ga_addr);
+#else
 		ga->ga_ioh = MIPS_PHYS_TO_KSEG1(ga->ga_addr);
+#endif
 
 		if (config_match(parent, cf, ga) > 0)
 			config_attach(parent, cf, ga, gio_print);
@@ -373,8 +387,13 @@ gio_cnattach(void)
 		ga.ga_slot = -1;
 		ga.ga_addr = gfx_bases[i].base;
 		/* XXX */
+#ifdef _LP64
+		if (platform.badaddr((void *)MIPS_PHYS_TO_XKPHYS_UNCACHED(ga.ga_addr),
+		    sizeof(uint32_t)))
+#else
 		if (platform.badaddr((void *)MIPS_PHYS_TO_KSEG1(ga.ga_addr),
 		    sizeof(uint32_t)))
+#endif
 			continue;
 		ga.ga_iot = normal_memt;
 		if (bus_space_map(normal_memt, ga.ga_addr, 0,
