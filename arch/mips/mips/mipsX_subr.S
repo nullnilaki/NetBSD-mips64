@@ -533,6 +533,9 @@ VECTOR(MIPSX(xtlb_miss), unknown)
 	bnez	k1, MIPSX(nopagetable)		#04: not legal address
 	 PTR_SRA k0, XSEGSHIFT - PTR_SCALESHIFT	#05: k0=seg offset (almost)
 	dla k1, (CPUVAR(PMAP_SEGTAB))
+	bgez	k0, 1f				#06: k0<0 -> kernel fault (not jump)
+	 PTR_ADDU k1, 1 << PTR_SCALESHIFT	#08: advance to kernel segtab
+1:
 	ld 	k1, 0(k1)
 	andi	k0, (NSEGPG-1)<<PTR_SCALESHIFT	#0a: k0=seg offset (mask 0x3)
 	PTR_ADDU k1, k0				#0b: k1=seg entry address
